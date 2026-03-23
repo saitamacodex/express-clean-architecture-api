@@ -18,5 +18,3 @@ This project demonstrates DTO-based validation using Joi, centralized error hand
 
 ---
 
-## 📂 Project Structure
-
