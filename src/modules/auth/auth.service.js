@@ -26,6 +26,9 @@ const register = async ({ name, email, password, role }) => {
     role,
     verificationToken: hashedToken,
   });
+
+  // TODO: send an email to user with token: rawToken
+
   const userObj = user.toObject();
   delete userObj.password;
   delete userObj.verificationToken;
@@ -46,8 +49,10 @@ const login = async ({ email, password }) => {
   }
 
   // todo : will check password here later
+
+  // we want to check if user is verified or not (or we want only verified user to login)
   if (!user.isVerified) {
-    throw ApiError.forbidden("Please Verify your rmail before login.");
+    throw ApiError.forbidden("Please Verify your email before login.");
   }
 
   // now we need to send token to user
@@ -55,12 +60,47 @@ const login = async ({ email, password }) => {
   const refreshToken = generateRefreshToken({ id: user._id });
 
   user.refreshtoken = hashToken(refreshToken);
+  // now we need to save the user
   await user.save({ validateBeforeSave: false });
+
   const userObj = user.toObject();
   delete userObj.password;
   delete userObj.refreshtoken;
 
+  // do cookies later, for now we will send token in response body
+
   return { userObj, accessToken, refreshToken };
+};
+
+const refreshToken = async (token) => {
+  if (!token) throw ApiError.unauthorized("Refresh token missing");
+  const decode = verifyRefreshToken(token);
+
+  const user = await User.findById(decode._id).select("+refreshToken");
+  if (!user) throw ApiError.unauthorized("User not found");
+
+  if (user.refreshtoken !== hashToken(token)) {
+    throw ApiError.unauthorized("Invalid refresh token");
+  }
+
+  const accessToken = generateAccessToken({ id: user._id, role: user.role });
+  const refreshToken = generateRefreshToken({ id: user._id });
+  user.refreshtoken = hashToken(refreshToken);
+  // now we need to save the user
+  await user.save({ validateBeforeSave: false });
+
+  return { accessToken, refreshToken };
+};
+
+const logOut = async (userID) => {
+  const user = await User.findById(userID);
+  if (!user) throw ApiError.unauthorized("User not found.");
+
+  user.refreshtoken = undefined;
+  await user.save({ validateBeforeSave: false });
+
+  // another way to do
+  // await User.findByIdAndUpdate(userId, { refreshToken: null });
 };
 
 export { register, login };
