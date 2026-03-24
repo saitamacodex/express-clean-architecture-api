@@ -103,4 +103,16 @@ const logOut = async (userID) => {
   // await User.findByIdAndUpdate(userId, { refreshToken: null });
 };
 
+const forgotPassword = async ({ email }) => {
+  const user = await findOne({ email });
+  if (!user) throw ApiError.notfound("User not found.");
+
+  const { rawToken, hashedToken } = generateResetToken();
+  user.resetPasswordtoken = hashedToken;
+  user.resetpasswordExpires = Date.now() + 15 * 60 * 1000;
+
+  await user.save();
+  // tpdp - send email
+};
+
 export { register, login };
