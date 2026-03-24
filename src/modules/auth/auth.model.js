@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       select: false,
     },
-    refreshtoken: {
+    refreshToken: {
       type: String,
       select: false,
     },

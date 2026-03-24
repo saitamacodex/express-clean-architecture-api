@@ -9,11 +9,11 @@ import {
 import User from "./auth.model.js";
 
 const hashToken = (token) => {
-  crypto.createHash("sha256").update(token).digest("hex");
+  return crypto.createHash("sha256").update(token).digest("hex");
 };
 
 const register = async ({ name, email, password, role }) => {
-  const existing = await User.findone({ email });
+  const existing = await User.findOne({ email });
   if (existing) {
     throw ApiError.conflict("Email already exist");
   }
@@ -56,47 +56,47 @@ const login = async ({ email, password }) => {
   }
 
   // now we need to send token to user
-  const accessToken = generateAccessToken({ id: user._id, role: user.role });
-  const refreshToken = generateRefreshToken({ id: user._id });
+  const newAccessToken = generateAccessToken({ id: user._id, role: user.role });
+  const newRefreshToken = generateRefreshToken({ id: user._id });
 
-  user.refreshtoken = hashToken(refreshToken);
+  user.refreshToken = hashToken(newRefreshToken);
   // now we need to save the user
   await user.save({ validateBeforeSave: false });
 
   const userObj = user.toObject();
   delete userObj.password;
-  delete userObj.refreshtoken;
+  delete userObj.refreshToken;
 
   // do cookies later, for now we will send token in response body
 
-  return { userObj, accessToken, refreshToken };
+  return { userObj, newAccessToken, newRefreshToken };
 };
 
-const refreshToken = async (token) => {
+const refresh = async (token) => {
   if (!token) throw ApiError.unauthorized("Refresh token missing");
   const decode = verifyRefreshToken(token);
 
-  const user = await User.findById(decode._id).select("+refreshToken");
+  const user = await User.findById(decode.id).select("+refreshToken");
   if (!user) throw ApiError.unauthorized("User not found");
 
-  if (user.refreshtoken !== hashToken(token)) {
+  if (user.refreshToken !== hashToken(token)) {
     throw ApiError.unauthorized("Invalid refresh token");
   }
 
   const accessToken = generateAccessToken({ id: user._id, role: user.role });
   const refreshToken = generateRefreshToken({ id: user._id });
-  user.refreshtoken = hashToken(refreshToken);
+  user.refreshToken = hashToken(refreshToken);
   // now we need to save the user
   await user.save({ validateBeforeSave: false });
 
   return { accessToken, refreshToken };
 };
 
-const logOut = async (userID) => {
+const logout = async (userID) => {
   const user = await User.findById(userID);
   if (!user) throw ApiError.unauthorized("User not found.");
 
-  user.refreshtoken = undefined;
+  user.refreshToken = undefined;
   await user.save({ validateBeforeSave: false });
 
   // another way to do
@@ -104,7 +104,7 @@ const logOut = async (userID) => {
 };
 
 const forgotPassword = async ({ email }) => {
-  const user = await findOne({ email });
+  const user = await User.findOne({ email });
   if (!user) throw ApiError.notfound("User not found.");
 
   const { rawToken, hashedToken } = generateResetToken();
@@ -115,4 +115,4 @@ const forgotPassword = async ({ email }) => {
   // tpdp - send email
 };
 
-export { register, login };
+export { register, login, refresh, logout, forgotPassword };

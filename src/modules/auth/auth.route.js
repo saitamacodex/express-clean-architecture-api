@@ -5,5 +5,6 @@ import RegisterDto from "./dto/register.dto";
 
 const router = Router();
 router.post("/register", validate(RegisterDto), controller.register);
+router.post("/login", controller.login);
 
 export default router;
