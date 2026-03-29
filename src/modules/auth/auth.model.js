@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
@@ -54,6 +55,22 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+// we have to save the password in hashed format - we use bcryptjs
+userSchema.pre("save", async function (next) {
+  // Only hash the password if it has been modified (e.g., on new user creation or password change)
+  if (!this.isModified("password")) {
+    return next();
+  }
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(err);
+    // Pass any errors to the next middleware or save callback
+  }
+});
 
 export default mongoose.model("User", userSchema);
 
