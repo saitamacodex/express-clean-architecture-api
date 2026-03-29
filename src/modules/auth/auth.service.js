@@ -48,7 +48,9 @@ const login = async ({ email, password }) => {
     throw ApiError.unauthorized("Invalid Email or Password");
   }
 
-  // todo : will check password here later
+  // will check password here
+  const isPassMatched = await user.comparePassword(password);
+  if (!isPassMatched) throw ApiError.unauthorized("Invalid Email or Password.");
 
   // we want to check if user is verified or not (or we want only verified user to login)
   if (!user.isVerified) {
@@ -115,4 +117,12 @@ const forgotPassword = async ({ email }) => {
   // tpdp - send email
 };
 
-export { register, login, refresh, logout, forgotPassword };
+const getProfile = async (userID) => {
+  const user = await User.findById(userID);
+  if (!user) {
+    throw ApiError.notfound("User not found");
+  }
+  return user;
+};
+
+export { register, login, refresh, logout, forgotPassword, getProfile };

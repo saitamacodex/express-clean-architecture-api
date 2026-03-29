@@ -72,6 +72,12 @@ userSchema.pre("save", async function (next) {
   }
 });
 
+// during login we will get a clear text password so we have to verify with hashed
+// in mongoose we get something "methods" where can we store functions and later use it
+userSchema.methods.comparePassword = async function (clearTextLoginPass) {
+  await bcrypt.compare(clearTextLoginPass, this.password);
+};
+
 export default mongoose.model("User", userSchema);
 
 // select : false -> “Do NOT include this field when fetching data from DB (by default)”
