@@ -3,7 +3,7 @@ import * as controller from "./auth.controller.js";
 import validate from "../../common/middleware/validate.middleware.js";
 import LoginDto from "./dto/login.dto.js";
 import RegisterDto from "./dto/register.dto.js";
-import ForgotPasswordDto from "./dto/forgot-password.dto.js";
+import ForgotPasswordDto from "./dto/forgotPasswordDto.js";
 import ResetPasswordDto from "./dto/reset-password.dto.js";
 import { authenticate } from "./auth.middleware.js";
 

@@ -1,5 +1,5 @@
-import ApiError from "../../common/utils/api-error";
-import { verifyAccessToken } from "../../common/utils/jwt.token";
+import ApiError from "../../common/utils/api-error.js";
+import { verifyAccessToken } from "../../common/utils/jwt.token.js";
 import User from "./auth.model.js";
 
 // to check if the user logged in or not
