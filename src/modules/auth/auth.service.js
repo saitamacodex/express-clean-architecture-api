@@ -78,8 +78,6 @@ const login = async ({ email, password }) => {
   delete userObj.password;
   delete userObj.refreshToken;
 
-  // do cookies later, for now we will send token in response body
-
   return { userObj, newAccessToken, newRefreshToken };
 };
 
@@ -154,7 +152,7 @@ const getProfile = async (userID) => {
   return user;
 };
 
-const verifyEmail = async function (rawToken) {
+const verifyEmails = async function (rawToken) {
   const hashedTokenValue = hashToken(rawToken);
   const user = await User.findOne({
     verificationToken: hashedTokenValue,
@@ -176,6 +174,6 @@ export {
   logout,
   forgotPassword,
   getProfile,
-  verifyEmail,
+  verifyEmails,
   resetPassword,
 };

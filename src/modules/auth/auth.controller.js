@@ -7,17 +7,20 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const { user, accessToken, refreshToken } = await authService.login(req.body);
+  const { user, newAccessToken, newRefreshToken } = await authService.login(
+    req.body,
+  );
+  console.log(newAccessToken);
   res
-    .cookie("refreshToken", refreshToken, {
+    .cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 1 day
       secure: true, // only sent over HTTPS
     })
-    .cookie("accessToken", accessToken, {
+    .cookie("accessToken", newAccessToken, {
       httpOnly: true,
       maxAge: 15 * 60 * 1000, // 15 minutes
-      seccure: true,
+      secure: true,
     });
   ApiResponse.ok(res, "Login Success", { user });
 };
@@ -32,7 +35,7 @@ const logout = async (req, res) => {
 };
 
 const verifyEmail = async (req, res) => {
-  await authService.verifyEmail(req.params.token);
+  await authService.verifyEmails(req.params.token);
   ApiResponse.ok(res, "Email Verified Successfully");
 };
 
@@ -44,13 +47,13 @@ const refreshTokens = async (req, res) => {
 };
 
 const forgotPassword = async (req, res) => {
-  await authService.forgotPassword(req.body.email);
+  await authService.forgotPassword(req.body);
   ApiResponse.ok(res, "Password Reset Success.");
 };
 
 const resetPassword = async (req, res) => {
   await authService.resetPassword(req.params.token, req.body.password);
-  ApiResponse.pk(res, "Password reset successful");
+  ApiResponse.ok(res, "Password reset successful");
 };
 
 const getProfile = async (req, res) => {
