@@ -10,7 +10,7 @@ const login = async (req, res) => {
   const { user, newAccessToken, newRefreshToken } = await authService.login(
     req.body,
   );
-  console.log(newAccessToken);
+
   res
     .cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
