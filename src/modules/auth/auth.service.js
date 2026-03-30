@@ -7,6 +7,10 @@ import {
   verifyRefreshToken,
 } from "../../common/utils/jwt.token.js";
 import User from "./auth.model.js";
+import {
+  sendRestPasswordEmail,
+  sendVerificationEmail,
+} from "../../common/config/email.js";
 
 const hashToken = (token) => {
   return crypto.createHash("sha256").update(token).digest("hex");
@@ -27,7 +31,12 @@ const register = async ({ name, email, password, role }) => {
     verificationToken: hashedToken,
   });
 
-  // TODO: send an email to user with token: rawToken
+  // send an email to user with token: rawToken
+  try {
+    await sendVerificationEmail(email, rawToken);
+  } catch (error) {
+    console.log(error);
+  }
 
   const userObj = user.toObject();
   delete userObj.password;
@@ -41,14 +50,14 @@ const login = async ({ email, password }) => {
   // if passwords match or not
   // check if verified or not
 
-  // With password select: false → you must use .select("+password")
-  //“Even though password it’s hidden, include it”
+  // by default password is not fetched because we have set select : false in model.
+  // so we need to explicitly tell mongoose to include password when fetching user by email
   const user = await User.findOne({ email }).select("+password");
   if (!user) {
     throw ApiError.unauthorized("Invalid Email or Password");
   }
 
-  // will check password here
+  // Password MATCHING
   const isPassMatched = await user.comparePassword(password);
   if (!isPassMatched) throw ApiError.unauthorized("Invalid Email or Password.");
 
@@ -107,14 +116,34 @@ const logout = async (userID) => {
 
 const forgotPassword = async ({ email }) => {
   const user = await User.findOne({ email });
-  if (!user) throw ApiError.notfound("User not found.");
+  if (!user) throw ApiError.notfound("No Account with that email.");
 
   const { rawToken, hashedToken } = generateResetToken();
   user.resetPasswordtoken = hashedToken;
   user.resetpasswordExpires = Date.now() + 15 * 60 * 1000;
 
   await user.save();
-  // tpdp - send email
+  try {
+    await sendRestPasswordEmail(email, rawToken);
+  } catch (error) {
+    console.log("Failed to send rest email:", error.message);
+  }
+};
+
+const resetPassword = async (token, newPassword) => {
+  const hashedtokenVal = hashToken(token);
+
+  const user = await User.findOne({
+    resetPasswordtoken: hashedtokenVal,
+    resetpasswordExpires: { $gt: Date.now() },
+  }).select("+resetPasswordtoken +resetpasswordExpires");
+
+  if (!user) throw ApiError.badRequest("Invalid or expired reset token");
+
+  user.password = newPassword;
+  user.resetPasswordtoken = undefined;
+  user.resetpasswordExpires = undefined;
+  await user.save();
 };
 
 const getProfile = async (userID) => {
@@ -125,4 +154,28 @@ const getProfile = async (userID) => {
   return user;
 };
 
-export { register, login, refresh, logout, forgotPassword, getProfile };
+const verifyEmail = async function (rawToken) {
+  const hashedTokenValue = hashToken(rawToken);
+  const user = await User.findOne({
+    verificationToken: hashedTokenValue,
+  }).select("+verificationToken");
+
+  if (!user) throw ApiError.notfound("User does not exist");
+
+  user.isVerified = true;
+  user.verificationToken = undefined;
+
+  await user.save();
+  return user;
+};
+
+export {
+  register,
+  login,
+  refresh,
+  logout,
+  forgotPassword,
+  getProfile,
+  verifyEmail,
+  resetPassword,
+};

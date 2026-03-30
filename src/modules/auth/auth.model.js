@@ -57,17 +57,16 @@ const userSchema = new mongoose.Schema(
 );
 
 // we have to save the password in hashed format - we use bcryptjs
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
   // Only hash the password if it has been modified (e.g., on new user creation or password change)
   if (!this.isModified("password")) {
-    return next();
+    return;
   }
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    next();
   } catch (error) {
-    next(err);
+    console.log(error);
     // Pass any errors to the next middleware or save callback
   }
 });
@@ -80,4 +79,4 @@ userSchema.methods.comparePassword = async function (clearTextLoginPass) {
 
 export default mongoose.model("User", userSchema);
 
-// select : false -> “Do NOT include this field when fetching data from DB (by default)”
+// select : false -> means “Do NOT include this field when fetching data from DB (by default)”
