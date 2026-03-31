@@ -12,12 +12,35 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendEmail = async function (to, subject, html) {
-  await transporter.sendMail({
-    from: `${process.env.SMTP_FROM_EMAIL}`,
-    to,
-    subject,
-    html,
-  });
+  // send email
+  try {
+    const info = await transporter.sendMail({
+      from: `${process.env.SMTP_FROM_NAME} <${process.env.SMTP_FROM_EMAIL}>`,
+      to,
+      subject,
+      html,
+    });
+    if (info.rejected.length > 0) {
+      console.warn("Some recipients were rejected:", info.rejected);
+    }
+    return info;
+  } catch (err) {
+    switch (err.code) {
+      case "ECONNECTION":
+      case "ETIMEDOUT":
+        console.error("Network error - retry later:", err.message);
+        break;
+      case "EAUTH":
+        console.error("Authentication failed:", err.message);
+        break;
+      case "EENVELOPE":
+        console.error("Invalid recipients:", err.rejected);
+        break;
+      default:
+        console.error("Send failed:", err.message);
+    }
+    throw err; // rethrow to let caller handle retries or user feedback
+  }
 };
 
 const sendVerificationEmail = async function (email, token) {
@@ -58,4 +81,5 @@ export {
   sendVerificationEmail,
   sendRestPasswordEmail,
   sendOrderConfirmationEmail,
+  transporter,
 };
