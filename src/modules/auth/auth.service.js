@@ -17,6 +17,8 @@ const hashToken = (token) => {
 };
 
 const register = async ({ name, email, password, role }) => {
+  // we need to check if email already exist or not
+  // query DB with email, if exist throw error else create user
   const existing = await User.findOne({ email });
   if (existing) {
     throw ApiError.conflict("Email already exist");
