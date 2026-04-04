@@ -22,7 +22,7 @@ const login = async (req, res) => {
       maxAge: 15 * 60 * 1000, // 15 minutes
       secure: true,
     });
-  ApiResponse.ok(res, "Login Success", { user });
+  ApiResponse.ok(res, "Login Success", { user, newAccessToken });
 };
 
 const logout = async (req, res) => {

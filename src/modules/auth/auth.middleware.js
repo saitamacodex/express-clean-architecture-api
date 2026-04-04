@@ -8,8 +8,9 @@ import User from "./auth.model.js";
 // fetch the token from header
 const authenticate = async (req, res, next) => {
   let token;
-  if (req.headers.authrization?.startsWith("Bearer")) {
-    token = req.headers.authrization.split(" ")[1];
+
+  if (req.headers.authorization?.startsWith("Bearer")) {
+    token = req.headers.authorization.split(" ")[1];
   }
   if (!token) throw ApiError.unauthorized("Not Authenticated");
   const decoded = verifyAccessToken(token);
