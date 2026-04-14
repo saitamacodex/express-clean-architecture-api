@@ -15,12 +15,12 @@ const login = async (req, res) => {
     .cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 1 day
-      secure: true, // only sent over HTTPS
+      secure: process.env.NODE_ENV === "production", // only sent over HTTPS
     })
     .cookie("accessToken", newAccessToken, {
       httpOnly: true,
       maxAge: 15 * 60 * 1000, // 15 minutes
-      secure: true,
+      secure: process.env.NODE_ENV === "production", // only sent over HTTPS
     });
   ApiResponse.ok(res, "Login Success", { user, newAccessToken });
 };
