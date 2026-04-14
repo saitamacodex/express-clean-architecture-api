@@ -29,9 +29,9 @@ const logout = async (req, res) => {
   await authService.logout(req.user.id);
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
   });
-  ApiResponse.ok(res, "Logout Success");
+  ApiResponse.ok(res, `Logout Success ${req.user.name}`);
 };
 
 const verifyEmail = async (req, res) => {
